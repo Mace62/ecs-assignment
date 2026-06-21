@@ -64,3 +64,13 @@ output "route53_zone_id" {
   description = "Route53 hosted zone ID (for DNS records)"
   value       = module.acm.route53_zone_id
 }
+
+## ALB
+
+output "alb_dns_name" {
+  value = module.alb.alb_dns_name
+}
+
+output "target_group_arn" {
+  value = module.alb.target_group_arn
+}
