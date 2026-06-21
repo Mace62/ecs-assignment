@@ -34,13 +34,13 @@ jspm_packages/
 /lib
 /dist/
 !/.eslintrc.json
-/build/
+app/build/
 !/project.json
 .terragrunt*
 /test-reports
 
 # Local .terraform directories
-**/.terraform/*
+**/.terraform/
 
 # .tfstate files
 *.tfstate
