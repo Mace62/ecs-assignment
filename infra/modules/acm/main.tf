@@ -1,14 +1,14 @@
 resource "aws_acm_certificate" "main" {
-    domain_name = "tm.sameh-labs.com"
-    validation_method = "DNS"
+  domain_name       = "tm.sameh-labs.com"
+  validation_method = "DNS"
 
-    lifecycle {
-        create_before_destroy = true
-    }
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 data "aws_route53_zone" "main" {
-    name         = "sameh-labs.com."
+  name = "sameh-labs.com."
 }
 
 resource "aws_route53_record" "validation" {
@@ -29,6 +29,6 @@ resource "aws_route53_record" "validation" {
 }
 
 resource "aws_acm_certificate_validation" "main" {
-    certificate_arn = aws_acm_certificate.main.arn
-    validation_record_fqdns = [for record in aws_route53_record.validation : record.fqdn]
+  certificate_arn         = aws_acm_certificate.main.arn
+  validation_record_fqdns = [for record in aws_route53_record.validation : record.fqdn]
 }
