@@ -47,3 +47,20 @@ output "ecr_repository_url" {
   description = "ECR repository URL (for docker push and ECS task definition)"
   value       = module.ecr.repository_url
 }
+
+## ACM
+
+output "acm_certificate_arn" {
+  description = "Validated ACM certificate ARN (for ALB HTTPS listener)"
+  value       = module.acm.certificate_arn
+}
+
+output "app_domain_name" {
+  description = "Public app hostname"
+  value       = module.acm.domain_name
+}
+
+output "route53_zone_id" {
+  description = "Route53 hosted zone ID (for DNS records)"
+  value       = module.acm.route53_zone_id
+}
