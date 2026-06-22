@@ -1,9 +1,3 @@
-variable "repository_name" {
-  description = "ECR repository name"
-  type        = string
-  default     = "threatmod-ecr"
-}
-
 variable "scan_on_push" {
   description = "Enable image scanning on push"
   type        = bool
