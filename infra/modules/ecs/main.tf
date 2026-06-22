@@ -67,7 +67,14 @@ resource "aws_ecs_task_definition" "main" {
         }
       }
     }
+    
   ])
+
+  lifecycle {
+    ignore_changes = [
+      container_definitions,
+    ]
+  }
 
   tags = {
     Name = "threatmod-ecs-task-definition"
@@ -91,6 +98,12 @@ resource "aws_ecs_service" "main" {
     target_group_arn = var.target_group_arn
     container_name   = "threatmod-ecs-container"
     container_port   = var.container_port
+  }
+
+  lifecycle {
+    ignore_changes = [
+      task_definition,
+    ]
   }
 
   tags = {
