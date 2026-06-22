@@ -1,5 +1,5 @@
 resource "aws_acm_certificate" "main" {
-  domain_name       = "tm.sameh-labs.com"
+  domain_name       = var.domain_name
   validation_method = "DNS"
 
   lifecycle {
@@ -8,7 +8,7 @@ resource "aws_acm_certificate" "main" {
 }
 
 data "aws_route53_zone" "main" {
-  name = "sameh-labs.com."
+  name = var.route53_zone_name
 }
 
 resource "aws_route53_record" "validation" {
