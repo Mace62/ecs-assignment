@@ -39,6 +39,9 @@ app/build/
 .terragrunt*
 /test-reports
 
+# Scripts for local development
+scripts/
+
 # Local .terraform directories
 **/.terraform/
 
