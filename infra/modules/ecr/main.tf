@@ -1,5 +1,5 @@
 resource "aws_ecr_repository" "main" {
-  name = "threatmod-ecr"
+  name         = "threatmod-ecr"
   force_delete = true
 
   tags = {

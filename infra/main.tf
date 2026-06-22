@@ -33,3 +33,12 @@ module "ecs" {
   target_group_arn      = module.alb.target_group_arn
   ecs_security_group_id = module.security.ecs_security_group_id
 }
+
+module "dns" {
+  source = "./modules/dns"
+
+  route53_zone_id = module.acm.route53_zone_id
+  domain_name     = module.acm.domain_name
+  alb_dns_name    = module.alb.alb_dns_name
+  alb_zone_id     = module.alb.alb_zone_id
+}

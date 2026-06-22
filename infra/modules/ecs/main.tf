@@ -75,25 +75,25 @@ resource "aws_ecs_task_definition" "main" {
 }
 
 resource "aws_ecs_service" "main" {
-    name = "threatmod-ecs-service"
-    cluster = aws_ecs_cluster.main.arn
-    task_definition = aws_ecs_task_definition.main.arn
-    desired_count = var.desired_count
-    launch_type = "FARGATE"
+  name            = "threatmod-ecs-service"
+  cluster         = aws_ecs_cluster.main.arn
+  task_definition = aws_ecs_task_definition.main.arn
+  desired_count   = var.desired_count
+  launch_type     = "FARGATE"
 
-    network_configuration {
-        subnets = var.private_subnet_ids
-        security_groups = [var.ecs_security_group_id]
-        assign_public_ip = false
-    }
+  network_configuration {
+    subnets          = var.private_subnet_ids
+    security_groups  = [var.ecs_security_group_id]
+    assign_public_ip = false
+  }
 
-    load_balancer {
-        target_group_arn = var.target_group_arn
-        container_name = "threatmod-ecs-container"
-        container_port = var.container_port
-    }
+  load_balancer {
+    target_group_arn = var.target_group_arn
+    container_name   = "threatmod-ecs-container"
+    container_port   = var.container_port
+  }
 
-    tags = {
-        Name = "threatmod-ecs-service"
-    }
+  tags = {
+    Name = "threatmod-ecs-service"
+  }
 }
