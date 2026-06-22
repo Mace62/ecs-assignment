@@ -6,5 +6,5 @@ variable "vpc_id" {
 variable "container_port" {
   description = "Port the container listens on"
   type        = number
-  default     = 80
+  default     = 8080
 }

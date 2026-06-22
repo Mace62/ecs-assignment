@@ -26,7 +26,7 @@ variable "ecs_security_group_id" {
 variable "container_port" {
   description = "Port the container listens on"
   type        = number
-  default     = 80
+  default     = 8080
 }
 
 variable "image_tag" {

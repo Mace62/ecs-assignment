@@ -18,7 +18,7 @@ variable "certificate_arn" {
 
 variable "container_port" {
   type    = number
-  default = 80
+  default = 8080
 }
 
 variable "health_check_path" {
