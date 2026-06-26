@@ -1,14 +1,4 @@
-###############################################################################
 # GitHub OIDC Bootstrap for ECS CI/CD
-#
-# This sets up the trust between GitHub Actions and your AWS account.
-# Run this ONCE before your pipelines will work.
-#
-# What it creates:
-#   1. GitHub OIDC Identity Provider in IAM
-#   2. IAM Role that GitHub Actions can assume
-#   3. IAM Policy with exactly the permissions the pipelines need
-###############################################################################
 
 terraform {
   required_version = ">= 1.5"
@@ -22,7 +12,7 @@ terraform {
 
   backend "s3" {
     bucket = "threatmod-tfstate"
-    key    = "dev/terraform.tfstate"
+    key    = "bootstrap/terraform.tfstate"
     region = "eu-west-2"
     use_lockfile = true
   }
@@ -32,13 +22,7 @@ provider "aws" {
   region = var.aws_region
 }
 
-# --------------------------------------------------------------------------
-# 1. GitHub OIDC Provider
-#
-# This tells AWS: "I trust tokens issued by GitHub Actions."
-# You only need ONE of these per AWS account, even if you have many repos.
-# If you already have one (from another project), you can import it or skip.
-# --------------------------------------------------------------------------
+## GitHub OIDC Provider
 
 data "tls_certificate" "github" {
   url = "https://token.actions.githubusercontent.com/.well-known/openid-configuration"
@@ -55,17 +39,7 @@ resource "aws_iam_openid_connect_provider" "github" {
   }
 }
 
-# --------------------------------------------------------------------------
-# 2. IAM Role for GitHub Actions
-#
-# This is the role your pipeline assumes. The trust policy says:
-#   - Only GitHub Actions can assume this role (via OIDC)
-#   - Only from YOUR specific repo (not any random GitHub repo)
-#   - Only from the branches you allow
-#
-# The "sub" condition is critical - without it, ANY GitHub repo could
-# assume your role. Always scope it to your org/repo.
-# --------------------------------------------------------------------------
+## IAM Role for GitHub Actions
 
 data "aws_iam_policy_document" "github_actions_trust" {
   statement {
@@ -102,17 +76,7 @@ resource "aws_iam_role" "github_actions" {
   }
 }
 
-# --------------------------------------------------------------------------
-# 3. IAM Policy - Exact Permissions for the Pipeline
-#
-# This is scoped to ONLY what the pipeline needs:
-#   - ECR: login, push/pull images
-#   - ECS: register task definitions, update services, describe for waiter
-#   - IAM: pass the ECS task execution role (required for register-task-def)
-#   - CloudWatch Logs: describe log groups (for task def validation)
-#
-# No admin access. No wildcards on actions. Least privilege.
-# --------------------------------------------------------------------------
+## IAM Policy - Exact Permissions for the Pipeline
 
 data "aws_caller_identity" "current" {}
 
