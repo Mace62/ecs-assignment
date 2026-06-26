@@ -1,0 +1,58 @@
+name: CD - Deploy to ECS
+
+on:
+  workflow_run:
+    workflows: ["CI - Build and Push to ECR"]
+    types: [completed]
+    branches: [ main ]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-west-2
+  ECR_REPOSITORY: threatmod-ecr
+  ECS_CLUSTER: threatmod-ecs-cluster
+  ECS_SERVICE: threatmod-ecs-service
+  CONTAINER_NAME: threatmod-ecs-container
+
+jobs:
+  auth:
+    name: Authenticate to AWS
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      image: ${{ steps.image.outputs.uri }}
+
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build image URI
+        id: image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        run: |
+          echo "uri=$ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.event.workflow_run.head_sha }}" >> $GITHUB_OUTPUT
+
+  deploy:
+    needs: auth
+    uses: ./.github/workflows/reusable-ecs-deploy.yml
+    with:
+      cluster: ${{ env.ECS_CLUSTER }}
+      service: ${{ env.ECS_SERVICE }}
+      container_name: ${{ env.CONTAINER_NAME }}
+      image: ${{ needs.auth.outputs.image }}
+      aws_region: ${{ env.AWS_REGION }}
