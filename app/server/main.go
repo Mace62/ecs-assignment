@@ -12,6 +12,16 @@ import (
 //go:embed all:static
 var embedded embed.FS
 
+func serveIndex(w http.ResponseWriter, content fs.FS) {
+	data, err := fs.ReadFile(content, "index.html")
+	if err != nil {
+		http.Error(w, "index.html not found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write(data)
+}
+
 func main() {
 	content, err := fs.Sub(embedded, "static")
 	if err != nil {
@@ -29,24 +39,22 @@ func main() {
 	})
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// Strip leading slash for embed FS paths (no leading /)
 		reqPath := strings.TrimPrefix(r.URL.Path, "/")
 
-		if reqPath == "" {
-			r.URL.Path = "/index.html"
-			fileServer.ServeHTTP(w, r)
+		// Never serve index.html via FileServer (it 301-redirects to ./)
+		if reqPath == "" || reqPath == "index.html" {
+			serveIndex(w, content)
 			return
 		}
 
-		// If file exists (e.g. static/js/..., index.html), serve it
+		// Real static assets only (js, css, images, etc.)
 		if _, err := content.Open(reqPath); err == nil {
 			fileServer.ServeHTTP(w, r)
 			return
 		}
 
-		// SPA route: /workspaces/default/dashboard -> index.html
-		r.URL.Path = "/index.html"
-		fileServer.ServeHTTP(w, r)
+		// SPA client routes -> index.html
+		serveIndex(w, content)
 	})
 
 	port := os.Getenv("PORT")
