@@ -1,0 +1,12 @@
+aws_region  = "eu-west-2"
+github_org  = "Mace62"
+github_repo = "ecs-assignment"
+
+allowed_subjects = [
+  "repo:Mace62/ecs-assignment:ref:refs/heads/main",
+  "repo:Mace62/ecs-assignment:pull_request",
+]
+
+ecr_repository_name         = "threatmod-ecr"
+ecs_task_execution_role_name = "ecsTaskExecutionRole"
+ecs_task_role_name           = "ecsTaskRole"
