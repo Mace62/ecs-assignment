@@ -23,7 +23,7 @@ on:
         description: "AWS region"
         required: false
         type: string
-        default: "eu-west-1"
+        default: "eu-west-2"
     outputs:
       task_definition_arn:
         description: "ARN of the newly registered task definition"
