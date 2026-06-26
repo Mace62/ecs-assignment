@@ -51,8 +51,8 @@ jobs:
     needs: auth
     uses: ./.github/workflows/reusable-ecs-deploy.yml
     with:
-      cluster: ${{ env.ECS_CLUSTER }}
-      service: ${{ env.ECS_SERVICE }}
-      container_name: ${{ env.CONTAINER_NAME }}
+      cluster: threatmod-ecs-cluster
+      service: threatmod-ecs-service
+      container_name: threatmod-ecs-container
       image: ${{ needs.auth.outputs.image }}
-      aws_region: ${{ env.AWS_REGION }}
+      aws_region: eu-west-2
