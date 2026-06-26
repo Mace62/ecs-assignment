@@ -43,11 +43,11 @@ variable "ecr_repository_name" {
 variable "ecs_task_execution_role_name" {
   description = "Name of the ECS task execution IAM role (the role ECS uses to pull images and write logs)"
   type        = string
-  default     = "ecsTaskExecutionRole"
+  default     = "threatmod-ecs-execution-role"
 }
 
 variable "ecs_task_role_name" {
   description = "Name of the ECS task IAM role (the role your application code assumes at runtime)"
   type        = string
-  default     = "ecsTaskRole"
+  default     = "threatmod-ecs-task-role"
 }
