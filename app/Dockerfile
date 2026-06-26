@@ -1,31 +1,27 @@
-# Stage 1: Build
+# Stage 1: Build frontend
 FROM node:22-alpine@sha256:b74031e546d7f4faf561d797ac1b76beccac856a042815ca77db4fd047581605 AS builder
 
 WORKDIR /app
-
 COPY package.json yarn.lock ./
-
 RUN yarn install --frozen-lockfile
-
 COPY . .
-
 RUN yarn build
 
-# Stage 2: Serve
-FROM nginx:alpine@sha256:35cd77497979abe70dc8d26f5ae60811eea233a2eb5dc03c2ee30972caeb303e
+# Stage 2: Compile Go server with embedded static assets
+FROM golang:1.23-alpine@sha256:383395b794dffa5b53012a212365d40c8e37109a626ca30d6151c8348d380b5f AS server
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /src
+COPY server/go.mod ./
+COPY server/main.go ./
+COPY --from=builder /app/build ./static
 
-COPY --from=builder /app/build /usr/share/nginx/html
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -trimpath -o /server .
 
-RUN chown -R nginx:nginx /usr/share/nginx/html \
-    /var/cache/nginx /var/log/nginx /etc/nginx/conf.d \
- && touch /var/run/nginx.pid \
- && chown nginx:nginx /var/run/nginx.pid
+# Stage 3: Distroless runtime (non-root UID 65532, no shell, no apk)
+FROM gcr.io/distroless/static-debian12@sha256:d093aa3e30dbadd3efe1310db061a14da60299baff8450a17fe0ccc514a16639
 
-USER nginx
+COPY --from=server /server /server
 
+ENV PORT=8080
 EXPOSE 8080
-
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD wget -qO- http://127.0.0.1/health | grep -q '"status":"ok"' || exit 1
+ENTRYPOINT ["/server"]
