@@ -48,11 +48,91 @@ jobs:
           echo "uri=$ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.event.workflow_run.head_sha }}" >> $GITHUB_OUTPUT
 
   deploy:
+    name: Deploy to ECS
     needs: auth
-    uses: ./.github/workflows/reusable-ecs-deploy.yml
-    with:
-      cluster: threatmod-ecs-cluster
-      service: threatmod-ecs-service
-      container_name: threatmod-ecs-container
-      image: ${{ needs.auth.outputs.image }}
-      aws_region: eu-west-2
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Download current task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition threatmod-ecs-task-definition \
+            --query 'taskDefinition' \
+            --output json > task-def.json
+
+          cat task-def.json | jq 'del(
+            .taskDefinitionArn,
+            .revision,
+            .status,
+            .requiresAttributes,
+            .compatibilities,
+            .registeredAt,
+            .registeredBy
+          )' > clean-task-def.json
+
+      - name: Update image in task definition
+        run: |
+          cat clean-task-def.json | jq \
+            --arg image "${{ needs.auth.outputs.image }}" \
+            --arg container "${{ env.CONTAINER_NAME }}" \
+            '(.containerDefinitions[] | select(.name == $container) | .image) = $image' \
+            > updated-task-def.json
+
+          echo "Updated ${{ env.CONTAINER_NAME }} to ${{ needs.auth.outputs.image }}"
+
+      - name: Register new task definition
+        id: register-task-def
+        run: |
+          NEW_TASK_DEF_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://updated-task-def.json \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+
+          echo "arn=$NEW_TASK_DEF_ARN" >> $GITHUB_OUTPUT
+          echo "Registered: $NEW_TASK_DEF_ARN"
+
+      - name: Update ECS service
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --task-definition ${{ steps.register-task-def.outputs.arn }} \
+            --force-new-deployment \
+            --query 'service.serviceName' \
+            --output text
+
+      - name: Wait for deployment to stabilise
+        run: |
+          echo "Waiting for ${{ env.ECS_SERVICE }} to stabilise..."
+          aws ecs wait services-stable \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --services ${{ env.ECS_SERVICE }}
+          echo "Deployment complete."
+
+      - name: Health check
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS https://tm.sameh-labs.com/health; then
+              echo "Health check passed"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+          echo "Health check failed"
+          exit 1
+
+      - name: Deployment summary
+        run: |
+          echo "### Deployment complete :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "**Cluster:** \`${{ env.ECS_CLUSTER }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Service:** \`${{ env.ECS_SERVICE }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`${{ needs.auth.outputs.image }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Task Definition:** \`${{ steps.register-task-def.outputs.arn }}\`" >> $GITHUB_STEP_SUMMARY
