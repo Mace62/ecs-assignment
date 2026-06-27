@@ -173,18 +173,28 @@ data "aws_iam_policy_document" "github_actions_terraform" {
   }
 
   statement {
-    sid    = "Route53Records"
+    sid    = "Route53RecordChanges"
     effect = "Allow"
     actions = [
       "route53:GetHostedZone",
       "route53:ChangeResourceRecordSets",
-      "route53:GetChange",
       "route53:ListResourceRecordSets",
       "route53:ListTagsForResource",
       "route53:ChangeTagsForResource",
     ]
     resources = [
       "arn:aws:route53:::hostedzone/*",
+    ]
+  }
+
+  statement {
+    sid    = "Route53GetChange"
+    effect = "Allow"
+    actions = [
+      "route53:GetChange",
+    ]
+    resources = [
+      "arn:aws:route53:::change/*",
     ]
   }
 
@@ -207,6 +217,7 @@ data "aws_iam_policy_document" "github_actions_terraform" {
       "acm:ListCertificates",
       "acm:AddTagsToCertificate",
       "acm:RemoveTagsFromCertificate",
+      "acm:ListTagsForCertificate",
     ]
     resources = ["*"]
   }
@@ -305,6 +316,12 @@ data "aws_iam_policy_document" "github_actions_terraform" {
       "ec2:DescribeTags",
       "ec2:DescribeAvailabilityZones",
       "ec2:DescribeAccountAttributes",
+      "ec2:DescribeVpcAttribute",
+      "ec2:DescribeSubnetAttribute",
+      "ec2:DescribeSecurityGroupRules",
+      "ec2:CreateSecurityGroupRule",
+      "ec2:DeleteSecurityGroupRule",
+      "ec2:DescribeAddressesAttribute",
     ]
     resources = ["*"]
   }
@@ -340,6 +357,8 @@ data "aws_iam_policy_document" "github_actions_terraform" {
       "iam:DetachRolePolicy",
       "iam:ListAttachedRolePolicies",
       "iam:ListInstanceProfilesForRole",
+      "iam:ListRolePolicies",
+      "iam:ListPolicyVersions",
     ]
     resources = [
       "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.ecs_task_execution_role_name}",
