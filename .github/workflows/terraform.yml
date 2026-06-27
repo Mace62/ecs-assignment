@@ -60,6 +60,7 @@ jobs:
       - name: Terraform Plan
         id: plan
         run: |
+          set -o pipefail
           terraform plan -input=false -out=tfplan -no-color | tee plan.txt
           echo "### Terraform Plan" >> $GITHUB_STEP_SUMMARY
           echo '```terraform' >> $GITHUB_STEP_SUMMARY
@@ -68,6 +69,7 @@ jobs:
 
       - name: Terraform Apply
         if: |
-          (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-          (github.event_name == 'workflow_dispatch' && inputs.apply == true)
+          success() &&
+          ((github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+          (github.event_name == 'workflow_dispatch' && inputs.apply == true))
         run: terraform apply -auto-approve tfplan

@@ -3,6 +3,10 @@ name: CI - Build and Push to ECR
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'app/**'
+      - '.github/workflows/build.yml'
+      - '.github/workflows/deploy.yml'
 
   workflow_dispatch:
 
