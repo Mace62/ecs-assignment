@@ -51,3 +51,9 @@ variable "ecs_task_role_name" {
   type        = string
   default     = "threatmod-ecs-task-role"
 }
+
+variable "tfstate_bucket_name" {
+  description = "S3 bucket used for Terraform remote state"
+  type        = string
+  default     = "threatmod-tfstate"
+}
