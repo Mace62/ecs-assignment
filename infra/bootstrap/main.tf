@@ -180,6 +180,8 @@ data "aws_iam_policy_document" "github_actions_terraform" {
       "route53:ChangeResourceRecordSets",
       "route53:GetChange",
       "route53:ListResourceRecordSets",
+      "route53:ListTagsForResource",
+      "route53:ChangeTagsForResource",
     ]
     resources = [
       "arn:aws:route53:::hostedzone/*",
