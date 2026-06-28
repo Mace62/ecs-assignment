@@ -33,7 +33,7 @@ Application releases are owned by the pipeline. Terraform owns infrastructure sk
 
 ![Architecture diagram](docs/Architecture%20Diagram.svg)
 
-> **AZ layout:** ALB spans **both** public subnets. ECS service is registered in **both** private subnets (see [Design decisions](#design-decisions) for task count and NAT choices).
+> **AZ layout:** ALB spans **both** public subnets. ECS service is registered in **both** private subnets.
 
 **Traffic flow**
 
