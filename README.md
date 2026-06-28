@@ -173,19 +173,23 @@ curl -I http://localhost:8080/
 
 ## Screenshots
 
+### Live application
+
+Threat Composer running at [https://tm.sameh-labs.com](https://tm.sameh-labs.com):
+
+![Threat Composer live at tm.sameh-labs.com](docs/screenshots/app-working.png)
+
 ### ClickOps (manual deployment)
 
 Step-by-step write-up and console screenshots are in [`docs/ClickOps/README.md`](docs/ClickOps/README.md).
 
 ### CI/CD (GitHub Actions)
 
-Add screenshots from successful workflow runs to `docs/screenshots/` and reference them here:
-
-| Pipeline | Screenshot |
-|----------|------------|
-| Build and push | `docs/screenshots/build-success.png` |
-| Deploy to ECS | `docs/screenshots/deploy-success.png` |
-| Terraform apply | `docs/screenshots/terraform-success.png` |
+| Pipeline                | Screenshot                                                        |
+|-------------------------|-------------------------------------------------------------------|
+| Build and push          | ![Build Success](docs/screenshots/build-success.png)              |
+| Deploy to ECS           | ![Deploy Success](docs/screenshots/deploy-success.png)            |
+| Terraform apply         | ![Terraform Success](docs/screenshots/terraform-success.png)      |
 
 ---
 
