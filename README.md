@@ -5,14 +5,6 @@ Production deployment of [AWS Threat Composer](https://github.com/aws/threat-com
 **Live URL:** [https://tm.sameh-labs.com](https://tm.sameh-labs.com)  
 **Health check:** [https://tm.sameh-labs.com/health](https://tm.sameh-labs.com/health) → `{"status":"ok"}`
 
-| Item | Value |
-|------|--------|
-| AWS region | `eu-west-2` |
-| Domain | `tm.sameh-labs.com` (zone: `sameh-labs.com`) |
-| ECS cluster | `threatmod-ecs-cluster` |
-| ECS service | `threatmod-ecs-service` |
-| ECR repository | `threatmod-ecr` |
-
 ---
 
 ## Overview
@@ -31,7 +23,19 @@ Application releases are owned by the pipeline. Terraform owns infrastructure sk
 
 ## Architecture
 
+The diagram below is **high level** — it shows main components and traffic paths, not every subnet, security group, or CI step. See [Design decisions](#design-decisions) for trade-offs and [`docs/Architecture Diagram.svg`](docs/Architecture%20Diagram.svg) for the full drawing.
+
 ![Architecture diagram](docs/Architecture%20Diagram.svg)
+
+**Key resources**
+
+| Item | Value |
+|------|--------|
+| AWS region | `eu-west-2` |
+| Domain | `tm.sameh-labs.com` (zone: `sameh-labs.com`) |
+| ECS cluster | `threatmod-ecs-cluster` |
+| ECS service | `threatmod-ecs-service` |
+| ECR repository | `threatmod-ecr` |
 
 > **AZ layout:** ALB spans **both** public subnets. ECS service is registered in **both** private subnets.
 
