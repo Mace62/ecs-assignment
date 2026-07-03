@@ -8,5 +8,5 @@ allowed_subjects = [
 ]
 
 ecr_repository_name         = "threatmod-ecr"
-ecs_task_execution_role_name = "ecsTaskExecutionRole"
-ecs_task_role_name           = "ecsTaskRole"
+ecs_task_execution_role_name = "threatmod-ecs-execution-role"
+ecs_task_role_name           = "threatmod-ecs-task-role"
