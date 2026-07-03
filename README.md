@@ -199,8 +199,6 @@ Step-by-step write-up and console screenshots are in [`docs/ClickOps/README.md`]
 
 ## Useful links
 
-- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-- [AWS ECS Documentation](https://docs.aws.amazon.com/ecs/)
 - [Threat Composer](https://github.com/aws/threat-composer)
 
 ---
