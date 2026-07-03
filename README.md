@@ -11,9 +11,9 @@ Production deployment of [AWS Threat Composer](https://github.com/aws/threat-com
 
 This project follows the **ClickOps → destroy → IaC** learning path:
 
-1. **ClickOps** — Manual first deployment via the AWS Console ([documented in `docs/ClickOps/README.md`](docs/ClickOps/README.md)), then torn down.
-2. **Terraform** — The same architecture rebuilt as modular IaC under `infra/`.
-3. **CI/CD** — GitHub Actions builds the Docker image, scans it, pushes to ECR, applies infrastructure changes, and deploys to ECS using **OIDC** (no long-lived AWS keys).
+1. **ClickOps** - Manual first deployment via the AWS Console ([documented in `docs/ClickOps/README.md`](docs/ClickOps/README.md)), then torn down.
+2. **Terraform** - The same architecture rebuilt as modular IaC under `infra/`.
+3. **CI/CD** - GitHub Actions builds the Docker image, scans it, pushes to ECR, applies infrastructure changes, and deploys to ECS using **OIDC** (no long-lived AWS keys).
 
 The runtime image is a **multi-stage Docker build**: Node builds the React app, Go embeds the static assets and serves them (including SPA routing and `/health`), and **distroless** runs the final container as non-root on port **8080**.
 
@@ -23,7 +23,7 @@ Application releases are owned by the pipeline. Terraform owns infrastructure sk
 
 ## Architecture
 
-The diagram below is **high level** — it shows main components and traffic paths, not every subnet, security group, or CI step. See [Design decisions](#design-decisions) for trade-offs and [`docs/Architecture Diagram.svg`](docs/Architecture%20Diagram.svg) for the full drawing.
+The diagram below is **high level** - it shows main components and traffic paths, not every subnet, security group, or CI step. See [Design decisions](#design-decisions) for trade-offs and [`docs/Architecture Diagram.svg`](docs/Architecture%20Diagram.svg) for the full drawing.
 
 ![Architecture diagram](docs/Architecture%20Diagram.svg)
 
@@ -52,23 +52,23 @@ The diagram below is **high level** — it shows main components and traffic pat
 
 This stack targets a **single dev environment**, not a reusable multi-account platform. The choices below are deliberate for an assignment/personal lab; production would parameterise and harden several of them.
 
-1. **Minimal root variables** — `infra/variables.tf` is empty. Region, VPC CIDR, domain, AZs, and resource names are fixed in module code or module-level defaults (e.g. `tm.sameh-labs.com`, `10.0.0.0/22`, `eu-west-2a/b`). That keeps the repo easy to review and apply without `tfvars` indirection. Production would use root variables and per-environment `*.tfvars`.
+1. **Minimal root variables** - `infra/variables.tf` is empty. Region, VPC CIDR, domain, AZs, and resource names are fixed in module code or module-level defaults (e.g. `tm.sameh-labs.com`, `10.0.0.0/22`, `eu-west-2a/b`). That keeps the repo easy to review and apply without `tfvars` indirection. Production would use root variables and per-environment `*.tfvars`.
 
-2. **Bootstrap vs main stack (separate state)** — GitHub OIDC and the CI IAM role live in `infra/bootstrap/` with state at `bootstrap/terraform.tfstate`. The application infrastructure lives in `infra/` with state at `dev/terraform.tfstate`. CI needs the role before it can apply main infra; bootstrap is also excluded from the `terraform.yml` workflow so an infra apply cannot modify OIDC.
+2. **Bootstrap vs main stack (separate state)** - GitHub OIDC and the CI IAM role live in `infra/bootstrap/` with state at `bootstrap/terraform.tfstate`. The application infrastructure lives in `infra/` with state at `dev/terraform.tfstate`. CI needs the role before it can apply main infra; bootstrap is also excluded from the `terraform.yml` workflow so an infra apply cannot modify OIDC.
 
-3. **Terraform owns skeleton; GitHub Actions owns releases** — Terraform provisions the ECS cluster, service, and initial task definition. `lifecycle { ignore_changes }` on `container_definitions` and the service’s `task_definition` stops every image push from causing plan drift. The deploy workflow registers new task definitions and updates the service instead.
+3. **Terraform owns skeleton; GitHub Actions owns releases** - Terraform provisions the ECS cluster, service, and initial task definition. `lifecycle { ignore_changes }` on `container_definitions` and the service’s `task_definition` stops every image push from causing plan drift. The deploy workflow registers new task definitions and updates the service instead.
 
-4. **`desired_count = 1`** — One Fargate task keeps dev cost down. The service is still registered across both private subnets for AZ flexibility; production would run multiple tasks (and often auto scaling).
+4. **`desired_count = 1`** - One Fargate task keeps dev cost down. The service is still registered across both private subnets for AZ flexibility; production would run multiple tasks (and often auto scaling).
 
-5. **Dedicated `security` module** — ALB and ECS security groups live together because the ECS ingress rule references the ALB security group by ID. That cross-reference is easier to manage in one module than split across ALB and ECS modules.
+5. **Dedicated `security` module** - ALB and ECS security groups live together because the ECS ingress rule references the ALB security group by ID. That cross-reference is easier to manage in one module than split across ALB and ECS modules.
 
-6. **ECR `force_delete = true`** — Allows `terraform destroy` to remove the repository even when images remain. Convenient for dev/teardown; production would typically set this to `false`.
+6. **ECR `force_delete = true`** - Allows `terraform destroy` to remove the repository even when images remain. Convenient for dev/teardown; production would typically set this to `false`.
 
-7. **Execution role only (no ECS task role)** — Tasks use `threatmod-ecs-execution-role` to pull from ECR and write logs. There is no separate task role because the app serves static content and does not call AWS APIs at runtime.
+7. **Execution role only (no ECS task role)** - Tasks use `threatmod-ecs-execution-role` to pull from ECR and write logs. There is no separate task role because the app serves static content and does not call AWS APIs at runtime.
 
-8. **S3 state bucket created outside Terraform** — `threatmod-tfstate` must exist before remote state works (chicken-and-egg). The bucket is created manually or via the console before the first bootstrap apply; both stacks then reference it in their backend blocks.
+8. **S3 state bucket created outside Terraform** - `threatmod-tfstate` must exist before remote state works (chicken-and-egg). The bucket is created manually or via the console before the first bootstrap apply; both stacks then reference it in their backend blocks.
 
-9. **Single NAT Gateway** — One NAT in **eu-west-2a** only; private subnets in both AZs route `0.0.0.0/0` through it. That reduces hourly NAT and data-processing cost while developing. Production would use **one NAT per AZ**, each private subnet routing to its local NAT, so an AZ outage does not break outbound traffic from tasks in the surviving AZ and you avoid cross-AZ NAT charges.
+9. **Single NAT Gateway** - One NAT in **eu-west-2a** only; private subnets in both AZs route `0.0.0.0/0` through it. That reduces hourly NAT and data-processing cost while developing. Production would use **one NAT per AZ**, each private subnet routing to its local NAT, so an AZ outage does not break outbound traffic from tasks in the surviving AZ and you avoid cross-AZ NAT charges.
 
 ---
 
@@ -111,7 +111,7 @@ This stack targets a **single dev environment**, not a reusable multi-account pl
 
 ## Reproduction guide
 
-### 1. Bootstrap — GitHub OIDC (once per account)
+### 1. Bootstrap - GitHub OIDC (once per account)
 
 Creates the GitHub OIDC provider and IAM role used by all workflows.
 
@@ -168,10 +168,10 @@ curl -I http://localhost:8080/
 
 ## Security notes
 
-- **OIDC** — Workflows assume `github-actions-ecs-deploy`; no static `AWS_ACCESS_KEY_ID` in GitHub.
-- **Least privilege** — Bootstrap attaches separate policies for ECR/ECS deploy and Terraform; bootstrap itself is not managed by the CI Terraform workflow.
-- **Container** — Distroless runtime, non-root (UID 65532), no shell; Grype gate on CI (`severity-cutoff: high`).
-- **Network** — ECS tasks in private subnets; only the ALB is internet-facing. ECS accepts traffic on 8080 from the ALB security group only.
+- **OIDC** - Workflows assume `github-actions-ecs-deploy`; no static `AWS_ACCESS_KEY_ID` in GitHub.
+- **Least privilege** - Bootstrap attaches separate policies for ECR/ECS deploy and Terraform; bootstrap itself is not managed by the CI Terraform workflow.
+- **Container** - Distroless runtime, non-root (UID 65532), no shell; Grype gate on CI (`severity-cutoff: high`).
+- **Network** - ECS tasks in private subnets; only the ALB is internet-facing. ECS accepts traffic on 8080 from the ALB security group only.
 
 ---
 
