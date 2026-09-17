@@ -32,6 +32,7 @@ module "ecs" {
   ecr_repository_url    = module.ecr.repository_url
   target_group_arn      = module.alb.target_group_arn
   ecs_security_group_id = module.security.ecs_security_group_id
+  desired_count         = 5
 }
 
 module "dns" {
