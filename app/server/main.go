@@ -4,6 +4,7 @@ import (
 	"embed"
 	"encoding/json"
 	"io/fs"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -60,6 +61,12 @@ func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
+	}
+
+	// Log entry on startup
+	log.Printf("server listening on :%s", port)
+	if err := http.ListenAndServe(":"+port, mux); err != nil {
+		log.Fatal(err)
 	}
 
 	if err := http.ListenAndServe(":"+port, mux); err != nil {
